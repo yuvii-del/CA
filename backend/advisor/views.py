@@ -693,9 +693,20 @@ def build_career_guidance_context(request):
     # If key not present or SDK missing, we render the fallback placeholders above.
     if request.method == "POST" and os.environ.get("GEMINI_API_KEY"):
         try:
-            from google import genai  
+            import google.generativeai as genai
+            import os
 
-            client = genai.Client()  
+            genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
+            model = genai.GenerativeModel("gemini-1.5-flash")
+
+            response = model.generate_content(prompt)
+
+            raw_text = (response.text or "").strip()
+            print("RAW AI RESPONSE:", raw_text)
+
+        except Exception as e:
+            print("AI ERROR:", str(e))   
 
             output_language_instruction = (
                 "Write all natural language fields in Tamil."
