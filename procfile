@@ -1,1 +1,1 @@
-web: gunicorn career_advisor.wsgi:application
+web: cd backend && gunicorn career_advisor.wsgi:application
