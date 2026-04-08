@@ -25,6 +25,13 @@ from django.utils.http import urlsafe_base64_encode
 from .career_normalize import normalize_required_skills
 from .i18n import normalize_lang, get_ui_strings, get_lang_from_request
 from .models import EmailOTP, CareerGuidanceHistory, StudentProfile
+from dotenv import load_dotenv
+import os
+
+load_dotenv(dotenv_path="D:/CareerAdvisor/backend/.env") 
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
 
 
 def _generate_otp(length: int = 6) -> str:
@@ -691,22 +698,13 @@ def build_career_guidance_context(request):
     # --- Gemini integration (server-side) ---
     # IMPORTANT: Do NOT hardcode keys. Set GEMINI_API_KEY in your environment.
     # If key not present or SDK missing, we render the fallback placeholders above.
+    import os
+
     if request.method == "POST" and os.environ.get("GEMINI_API_KEY"):
         try:
-            import google.generativeai as genai
-            import os
+            from google import genai
 
-            genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-
-            model = genai.GenerativeModel("gemini-1.5-flash")
-
-            response = model.generate_content(prompt)
-
-            raw_text = (response.text or "").strip()
-            print("RAW AI RESPONSE:", raw_text)
-
-        except Exception as e:
-            print("AI ERROR:", str(e))   
+            client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
             output_language_instruction = (
                 "Write all natural language fields in Tamil."
@@ -747,10 +745,11 @@ def build_career_guidance_context(request):
             )
 
             response = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt,
-            )
+            model="gemini-2.5-flash",
+            contents=prompt,
+        )
 
+            ai_text = response.text
            # The SDK exposes response.text for convenient access.
             import re
 
@@ -1119,6 +1118,7 @@ def career_guidance_pdf_view(request):
     pdf.showPage()
     pdf.save()
     return response
+
 
 
 def chatbot_view(request):
